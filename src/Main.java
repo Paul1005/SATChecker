@@ -8,7 +8,7 @@ public class Main {
 
         ArrayList<String> formulas = new ArrayList<>();
         formulas.add("p || q");
-        formulas.add("p && !r");
+        formulas.add("p || r");
         SATChecker satChecker = new SATChecker();
         satChecker.isSatisfiable(formulas);
     }

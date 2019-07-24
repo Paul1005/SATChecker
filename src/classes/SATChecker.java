@@ -39,17 +39,18 @@ public class SATChecker {
 
 
         for (int i = 0; i < numRows; i++) {
+            boolean isSatisfiable = true;
             for (int j = 0; j < terms.size(); j++) {
                 termDictionary.replace(terms.get(j), booleanMap.get((i / (int) Math.pow(2, j)) % 2));
             }
 
             //do equations with current terms
             for (String formula : formulas) {
-
                 String[] splitFormula = formula.split(" ");
-                evaluateFormula(splitFormula);
-
+                isSatisfiable = isSatisfiable && evaluateFormula(splitFormula);
             }
+            System.out.println(termDictionary.toString());
+            System.out.println(isSatisfiable);
         }
 
         return false;
