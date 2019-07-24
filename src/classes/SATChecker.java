@@ -92,8 +92,6 @@ public class SATChecker {
         }*/
 
         if (splitFormula.length > 3) {
-            return answer;
-        } else {
             String[] newSplitFormula = new String[splitFormula.length-2];
 
             if(answer){
@@ -107,6 +105,8 @@ public class SATChecker {
             }
 
             return evaluateFormula(newSplitFormula);
+        } else {
+            return answer;
         }
     }
 }
