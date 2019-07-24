@@ -12,9 +12,6 @@ public class SATChecker {
     public boolean isSatisfiable(ArrayList<String> formulas) {
 
         //gather all terms
-
-        //int numTerms = 0;
-
         for (String formula : formulas) {
             String[] splitFormula = formula.split(" ");
             for (String term : splitFormula) {
@@ -22,7 +19,6 @@ public class SATChecker {
                 for (char character : chars) {
                     if (Character.isLetter(character)) {
                         if (termDictionary.get(character) == null) {
-                            //numTerms++;
                             termDictionary.put(character, false);
                             terms.add(character);
                         }
@@ -60,16 +56,20 @@ public class SATChecker {
         boolean term1;
         boolean term2;
 
-        if (splitFormula[0].equals("true")) {
-            term1 = true;
-        } else if (splitFormula[0].equals("false")) {
-            term1 = false;
-        } else {
-            if (splitFormula[0].toCharArray()[0] == '!') {
-                term1 = !termDictionary.get(splitFormula[0].toCharArray()[1]);
-            } else {
-                term1 = termDictionary.get(splitFormula[0].toCharArray()[0]);
-            }
+        switch (splitFormula[0]) {
+            case "true":
+                term1 = true;
+                break;
+            case "false":
+                term1 = false;
+                break;
+            default:
+                if (splitFormula[0].toCharArray()[0] == '!') {
+                    term1 = !termDictionary.get(splitFormula[0].toCharArray()[1]);
+                } else {
+                    term1 = termDictionary.get(splitFormula[0].toCharArray()[0]);
+                }
+                break;
         }
 
         if (splitFormula[2].toCharArray()[0] == '!') {
@@ -81,15 +81,20 @@ public class SATChecker {
         boolean answer = false;
 
 
-        if (splitFormula[1].equals("||")) {
-            answer = term1 || term2;
-        } else if (splitFormula[1].equals("&&")) {
-            answer = term1 && term2;
-        }/* else if(splitFormula[1].equals("?")){
-                return termDictionary.get(term1) ? termDictionary.get(term2);
-        } else if(splitFormula[1].equals("??")){
-                return termDictionary.get(term1) ?? termDictionary.get(term2);
-        }*/
+        switch (splitFormula[1]) {
+            case "||":
+                answer = term1 || term2;
+                break;
+            case "&&":
+                answer = term1 && term2;
+                break;
+            case "?":
+                answer = !(term1 && !term2);
+                break;
+            case "??":
+                answer = term1 == term2;
+                break;
+        }
 
         if (splitFormula.length > 3) {
             String[] newSplitFormula = new String[splitFormula.length-2];
@@ -100,9 +105,7 @@ public class SATChecker {
                 newSplitFormula[0] = "false";
             }
 
-            for (int i = 3; i<splitFormula.length; i++){
-                newSplitFormula[i-2] = splitFormula[i];
-            }
+            System.arraycopy(splitFormula, 3, newSplitFormula, 1, splitFormula.length - 3);
 
             return evaluateFormula(newSplitFormula);
         } else {
