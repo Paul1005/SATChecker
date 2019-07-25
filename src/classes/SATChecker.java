@@ -33,7 +33,7 @@ public class SATChecker {
         booleanMap.put(0, false);
         booleanMap.put(1, true);
 
-
+        boolean isSetSatisfiable = false;
         for (int i = 0; i < numRows; i++) {
             boolean isSatisfiable = true;
             for (int j = 0; j < terms.size(); j++) {
@@ -45,11 +45,13 @@ public class SATChecker {
                 String[] splitFormula = formula.split(" ");
                 isSatisfiable = isSatisfiable && evaluateFormula(splitFormula);
             }
+
+            isSetSatisfiable = isSatisfiable || isSetSatisfiable;
             System.out.println(termDictionary.toString());
             System.out.println(isSatisfiable);
         }
-
-        return false;
+        System.out.println(isSetSatisfiable);
+        return isSetSatisfiable;
     }
 
     private boolean evaluateFormula(String[] splitFormula) {
