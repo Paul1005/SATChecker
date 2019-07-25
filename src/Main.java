@@ -10,6 +10,6 @@ public class Main {
         formulas.add("p || q || r || t");
         //formulas.add("p || r");
         SATChecker satChecker = new SATChecker();
-        satChecker.isSatisfiable(formulas);
+        System.out.println(satChecker.isSatisfiable(formulas));
     }
 }

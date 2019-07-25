@@ -11,7 +11,6 @@ public class SATChecker {
     private ArrayList<Character> terms = new ArrayList<>();
 
     public boolean isSatisfiable(ArrayList<String> formulas) {
-
         //gather all terms
         for (String formula : formulas) {
             String[] splitFormula = formula.split(" ");
@@ -51,7 +50,7 @@ public class SATChecker {
             System.out.println(termDictionary.toString());
             System.out.println(isSatisfiable);
         }
-        System.out.println(isSetSatisfiable);
+
         return isSetSatisfiable;
     }
 
@@ -64,7 +63,13 @@ public class SATChecker {
                 if(formula.charAt(i) == '('){
                     bracketCount++;
                     if(bracketCount == 0){
-                        startSeparations.add(i);
+                        if(i>0) {
+                            if (formula.charAt(i - 1) == '!') {
+                                startSeparations.add(i - 1);
+                            }
+                        } else {
+                            startSeparations.add(i);
+                        }
                     }
                 } else if(formula.charAt(i) == ')'){
                     bracketCount--;
@@ -77,11 +82,11 @@ public class SATChecker {
             ArrayList<String> formulaArray = new ArrayList<>();
             for(int i = 0; i < startSeparations.size(); i++) {
                 if(i == 0 && startSeparations.get(i) != 0){
-                    formulaArray.addAll(Arrays.asList(formula.substring(0, startSeparations.get(i)).split(" ")));
+                    formulaArray.addAll(Arrays.asList(formula.substring(0, startSeparations.get(i)-1).split(" ")));
                 } else {
-                    formulaArray.add(formula.substring(startSeparations.get(i) + 1, endSeparations.get(i)));
+                    formulaArray.add(formula.substring(startSeparations.get(i), endSeparations.get(i)+1));
                     if(i+1 < startSeparations.size()) {
-                        formulaArray.addAll(Arrays.asList(formula.substring(endSeparations.get(i) + 1, startSeparations.get(i + 1)).split(" ")));
+                        formulaArray.addAll(Arrays.asList(formula.substring(endSeparations.get(i) + 1, startSeparations.get(i + 1)-1).split(" ")));
                     }
                 }
             }
@@ -96,31 +101,47 @@ public class SATChecker {
     }
 
     private boolean evaluateFormula(String[] splitFormula) {
-        boolean term1;
-        boolean term2;
+        boolean term1 = false;
+        boolean term2 = false;
 
-        // see if first term has already been set
-        switch (splitFormula[0]) {
-            case "true":
-                term1 = true;
-                break;
-            case "false":
-                term1 = false;
-                break;
-            default:
-                if (splitFormula[0].toCharArray()[0] == '!') {
-                    term1 = !termDictionary.get(splitFormula[0].toCharArray()[1]);
-                } else {
-                    term1 = termDictionary.get(splitFormula[0].toCharArray()[0]);
-                }
-                break;
+        if(splitFormula[0].endsWith(")")) {
+            if(splitFormula[0].startsWith("(")) {
+                term1 = evaluateFormula(breakUpTerms(splitFormula[0].substring(1,splitFormula[0].length()-1)));
+            } else if(splitFormula[0].startsWith("!(")){
+                term1 = !evaluateFormula(breakUpTerms(splitFormula[0].substring(2,splitFormula[0].length()-1)));
+            }
+        } else {
+            // see if first term has already been set
+            switch (splitFormula[0]) {
+                case "true":
+                    term1 = true;
+                    break;
+                case "false":
+                    term1 = false;
+                    break;
+                default:
+                    if (splitFormula[0].toCharArray()[0] == '!') {
+                        term1 = !termDictionary.get(splitFormula[0].toCharArray()[1]);
+                    } else {
+                        term1 = termDictionary.get(splitFormula[0].toCharArray()[0]);
+                    }
+                    break;
+            }
         }
 
-        // get result of second term
-        if (splitFormula[2].toCharArray()[0] == '!') {
-            term2 = !termDictionary.get(splitFormula[2].toCharArray()[1]);
+        if(splitFormula[2].endsWith(")")) {
+            if(splitFormula[2].startsWith("(")) {
+                term2 = evaluateFormula(breakUpTerms(splitFormula[2].substring(1,splitFormula[0].length()-1)));
+            } else if(splitFormula[2].startsWith("!(")){
+                term2 = !evaluateFormula(breakUpTerms(splitFormula[2].substring(2,splitFormula[0].length()-1)));
+            }
         } else {
-            term2 = termDictionary.get(splitFormula[2].toCharArray()[0]);
+            // get result of second term
+            if (splitFormula[2].toCharArray()[0] == '!') {
+                term2 = !termDictionary.get(splitFormula[2].toCharArray()[1]);
+            } else {
+                term2 = termDictionary.get(splitFormula[2].toCharArray()[0]);
+            }
         }
 
         boolean answer = false;
