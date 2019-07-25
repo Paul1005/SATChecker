@@ -1,13 +1,14 @@
 package classes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class SATChecker {
 
-    Map<Character, Boolean> termDictionary = new HashMap<>();
-    ArrayList<Character> terms = new ArrayList<>();
+    private Map<Character, Boolean> termDictionary = new HashMap<>();
+    private ArrayList<Character> terms = new ArrayList<>();
 
     public boolean isSatisfiable(ArrayList<String> formulas) {
 
@@ -42,7 +43,7 @@ public class SATChecker {
 
             //do equations with current terms
             for (String formula : formulas) {
-                String[] splitFormula = formula.split(" ");
+                String[] splitFormula = breakUpTerms(formula);
                 isSatisfiable = isSatisfiable && evaluateFormula(splitFormula);
             }
 
@@ -54,10 +55,51 @@ public class SATChecker {
         return isSetSatisfiable;
     }
 
+    private String[] breakUpTerms(String formula) {
+        if(formula.contains("(") && formula.contains(")")){
+            ArrayList<Integer> startSeparations = new ArrayList<>();
+            ArrayList<Integer> endSeparations = new ArrayList<>();
+            int bracketCount = 0;
+            for(int i = 0; i<formula.length(); i++){
+                if(formula.charAt(i) == '('){
+                    bracketCount++;
+                    if(bracketCount == 0){
+                        startSeparations.add(i);
+                    }
+                } else if(formula.charAt(i) == ')'){
+                    bracketCount--;
+                    if(bracketCount == 0){
+                        endSeparations.add(i);
+                    }
+                }
+            }
+
+            ArrayList<String> formulaArray = new ArrayList<>();
+            for(int i = 0; i < startSeparations.size(); i++) {
+                if(i == 0 && startSeparations.get(i) != 0){
+                    formulaArray.addAll(Arrays.asList(formula.substring(0, startSeparations.get(i)).split(" ")));
+                } else {
+                    formulaArray.add(formula.substring(startSeparations.get(i) + 1, endSeparations.get(i)));
+                    if(i+1 < startSeparations.size()) {
+                        formulaArray.addAll(Arrays.asList(formula.substring(endSeparations.get(i) + 1, startSeparations.get(i + 1)).split(" ")));
+                    }
+                }
+            }
+
+            String[] splitFormula = new String[formulaArray.size()];
+            formulaArray.toArray(splitFormula);
+
+            return splitFormula;
+        } else {
+            return formula.split(" ");
+        }
+    }
+
     private boolean evaluateFormula(String[] splitFormula) {
         boolean term1;
         boolean term2;
 
+        // see if first term has already been set
         switch (splitFormula[0]) {
             case "true":
                 term1 = true;
@@ -74,6 +116,7 @@ public class SATChecker {
                 break;
         }
 
+        // get result of second term
         if (splitFormula[2].toCharArray()[0] == '!') {
             term2 = !termDictionary.get(splitFormula[2].toCharArray()[1]);
         } else {
@@ -82,7 +125,7 @@ public class SATChecker {
 
         boolean answer = false;
 
-
+        // set result of first part of equation
         switch (splitFormula[1]) {
             case "||":
                 answer = term1 || term2;
@@ -98,15 +141,18 @@ public class SATChecker {
                 break;
         }
 
+        // if there are more terms, function calls itself
         if (splitFormula.length > 3) {
             String[] newSplitFormula = new String[splitFormula.length-2];
 
+            // set first part of equation to true or false
             if(answer){
                 newSplitFormula[0] = "true";
-            } else if (!answer){
+            } else {
                 newSplitFormula[0] = "false";
             }
 
+            // copy remainder of old formula to new one
             System.arraycopy(splitFormula, 3, newSplitFormula, 1, splitFormula.length - 3);
 
             return evaluateFormula(newSplitFormula);
