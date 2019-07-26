@@ -7,6 +7,7 @@ import java.util.Map;
 
 public class SATChecker {
 
+    public ArrayList<String> solution = new ArrayList<>();
     private Map<Character, Boolean> termDictionary = new HashMap<>();
     private ArrayList<Character> terms = new ArrayList<>();
 
@@ -47,8 +48,9 @@ public class SATChecker {
             }
 
             isSetSatisfiable = isSatisfiable || isSetSatisfiable;
-            System.out.println(termDictionary.toString());
-            System.out.println(isSatisfiable);
+            if(isSatisfiable){
+                solution.add(termDictionary.toString());
+            }
         }
 
         return isSetSatisfiable;
