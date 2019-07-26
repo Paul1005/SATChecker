@@ -55,39 +55,43 @@ public class SATChecker {
     }
 
     private String[] breakUpTerms(String formula) {
-        if(formula.contains("(") && formula.contains(")")){
+        if (formula.contains("(") && formula.contains(")")) {
             ArrayList<Integer> startSeparations = new ArrayList<>();
             ArrayList<Integer> endSeparations = new ArrayList<>();
             int bracketCount = 0;
-            for(int i = 0; i<formula.length(); i++){
-                if(formula.charAt(i) == '('){
-                    bracketCount++;
-                    if(bracketCount == 0){
-                        if(i>0) {
+            for (int i = 0; i < formula.length(); i++) {
+                if (formula.charAt(i) == '(') {
+                    if (bracketCount == 0) {
+                        if (i > 0) {
                             if (formula.charAt(i - 1) == '!') {
                                 startSeparations.add(i - 1);
+                            } else {
+                                startSeparations.add(i);
                             }
                         } else {
                             startSeparations.add(i);
                         }
                     }
-                } else if(formula.charAt(i) == ')'){
+                    bracketCount++;
+                } else if (formula.charAt(i) == ')') {
                     bracketCount--;
-                    if(bracketCount == 0){
+                    if (bracketCount == 0) {
                         endSeparations.add(i);
                     }
                 }
             }
 
             ArrayList<String> formulaArray = new ArrayList<>();
-            for(int i = 0; i < startSeparations.size(); i++) {
-                if(i == 0 && startSeparations.get(i) != 0){
-                    formulaArray.addAll(Arrays.asList(formula.substring(0, startSeparations.get(i)-1).split(" ")));
-                } else {
-                    formulaArray.add(formula.substring(startSeparations.get(i), endSeparations.get(i)+1));
-                    if(i+1 < startSeparations.size()) {
-                        formulaArray.addAll(Arrays.asList(formula.substring(endSeparations.get(i) + 1, startSeparations.get(i + 1)-1).split(" ")));
-                    }
+            for (int i = 0; i < startSeparations.size(); i++) {
+                if (i == 0 && startSeparations.get(i) != 0) { // brackets not at the beginning
+                    formulaArray.addAll(Arrays.asList(formula.substring(0, startSeparations.get(i) - 1).split(" ")));
+                }
+                formulaArray.add(formula.substring(startSeparations.get(i), endSeparations.get(i) + 1)); // separate bracketed section
+                if (i + 1 < startSeparations.size()) { // if there are non bracketed sections after, separate them
+                    formulaArray.addAll(Arrays.asList(formula.substring(endSeparations.get(i) + 2, startSeparations.get(i + 1) - 1).split(" ")));
+                }
+                if (i == startSeparations.size() - 1 && endSeparations.get(i) != formula.length()-1) { // add last non-bracketed terms if there are any
+                    formulaArray.addAll(Arrays.asList(formula.substring(endSeparations.get(i) + 2).split(" ")));
                 }
             }
 
@@ -104,11 +108,13 @@ public class SATChecker {
         boolean term1 = false;
         boolean term2 = false;
 
-        if(splitFormula[0].endsWith(")")) {
-            if(splitFormula[0].startsWith("(")) {
-                term1 = evaluateFormula(breakUpTerms(splitFormula[0].substring(1,splitFormula[0].length()-1)));
-            } else if(splitFormula[0].startsWith("!(")){
-                term1 = !evaluateFormula(breakUpTerms(splitFormula[0].substring(2,splitFormula[0].length()-1)));
+        //System.out.println(Arrays.toString(splitFormula));
+
+        if (splitFormula[0].endsWith(")")) {
+            if (splitFormula[0].startsWith("(")) {
+                term1 = evaluateFormula(breakUpTerms(splitFormula[0].substring(1, splitFormula[0].length() - 1)));
+            } else if (splitFormula[0].startsWith("!(")) {
+                term1 = !evaluateFormula(breakUpTerms(splitFormula[0].substring(2, splitFormula[0].length() - 1)));
             }
         } else {
             // see if first term has already been set
@@ -129,11 +135,11 @@ public class SATChecker {
             }
         }
 
-        if(splitFormula[2].endsWith(")")) {
-            if(splitFormula[2].startsWith("(")) {
-                term2 = evaluateFormula(breakUpTerms(splitFormula[2].substring(1,splitFormula[0].length()-1)));
-            } else if(splitFormula[2].startsWith("!(")){
-                term2 = !evaluateFormula(breakUpTerms(splitFormula[2].substring(2,splitFormula[0].length()-1)));
+        if (splitFormula[2].endsWith(")")) {
+            if (splitFormula[2].startsWith("(")) {
+                term2 = evaluateFormula(breakUpTerms(splitFormula[2].substring(1, splitFormula[2].length() - 1)));
+            } else if (splitFormula[2].startsWith("!(")) {
+                term2 = !evaluateFormula(breakUpTerms(splitFormula[2].substring(2, splitFormula[2].length() - 1)));
             }
         } else {
             // get result of second term
@@ -164,10 +170,10 @@ public class SATChecker {
 
         // if there are more terms, function calls itself
         if (splitFormula.length > 3) {
-            String[] newSplitFormula = new String[splitFormula.length-2];
+            String[] newSplitFormula = new String[splitFormula.length - 2];
 
             // set first part of equation to true or false
-            if(answer){
+            if (answer) {
                 newSplitFormula[0] = "true";
             } else {
                 newSplitFormula[0] = "false";
