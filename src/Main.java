@@ -9,6 +9,8 @@ public class Main {
 
         ArrayList<String> formulas = new ArrayList<>();
         Scanner scanner = new Scanner(System.in);  // Create a Scanner object
+
+        // Give user instructions
         System.out.println("Please enter 1 or more formulas, when you have finished, press enter twice \n" +
                 "Operand symbols are: \n" +
                 "|| for OR \n" +
@@ -19,6 +21,7 @@ public class Main {
                 "Put spaces between terms and operands but not between terms and negations or spaces");
 
         String formula;
+        // Grab input until user hits enter twice
         do {
             formula = scanner.nextLine();
             if(!formula.isEmpty()) {
@@ -28,6 +31,7 @@ public class Main {
 
         SATChecker satChecker = new SATChecker();
 
+        // print the result
         if(satChecker.isSatisfiable(formulas)){
             System.out.println("The set is satisfiable");
             System.out.println("The solution(s) to this set is/are:");
