@@ -18,7 +18,7 @@ public class Main {
                 "? for CONDITIONAL \n" +
                 "?? for BICONDITIONAL \n" +
                 "Use ! for negation \n" +
-                "Put spaces between terms and operands but not between terms and negations or spaces");
+                "Put spaces between terms and operands but not between terms and negations or brackets");
 
         String formula;
         // Grab input until user hits enter twice

@@ -1,15 +1,15 @@
 package classes;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class SATChecker {
 
     public ArrayList<String> solution = new ArrayList<>();
     private Map<Character, Boolean> termDictionary = new HashMap<>();
+    private Stack<Character> charStack = new Stack<>();
     private ArrayList<Character> terms = new ArrayList<>();
+    private ArrayList<Formula> formulaList = new ArrayList<>();
+    boolean isSetSatisfiable = true;
 
     /*
     Verify whether the equation or set of equations is satisfiable
@@ -17,6 +17,7 @@ public class SATChecker {
     public boolean isSatisfiable(ArrayList<String> formulas) {
         // gather all terms
         for (String formula : formulas) { // for each formula
+            Formula formulaObject = new Formula(formula);
             String[] splitFormula = formula.split(" "); // split the formula up by space
             for (String term : splitFormula) { // for each of these parts
                 char[] chars = term.toCharArray(); // turn each term into a character array
@@ -25,10 +26,12 @@ public class SATChecker {
                         if (termDictionary.get(character) == null) { // add it to our dictionary and list of terms if it's not already there
                             termDictionary.put(character, false);
                             terms.add(character);
+                            formulaObject.setTerms(character);
                         }
                     }
                 }
             }
+            formulaList.add(formulaObject);
         }
 
         // generate number or rows in our truth table
@@ -40,7 +43,92 @@ public class SATChecker {
         booleanMap.put(1, true);
 
         boolean isSetSatisfiable = false;
-        for (int i = 0; i < numRows; i++) {
+
+        /*for (int i = 0; i < terms.size(); i++) {
+            for (int j = 0; j < 2; j++) {
+                for (String formula : formulas) {
+                
+                }
+                termDictionary.replace(terms.get(i), booleanMap.get(j)); //set the row values for our terms
+            }
+        }
+
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j <terms.size() ; j++) {
+                termDictionary.replace(terms.get(j), booleanMap.get(i)); //set the row values for our terms
+            }
+        }*/
+
+        Node firstNode = new Node();
+
+        for (Character term : terms) {
+            termDictionary.replace(term, null);
+            firstNode.states.add(null);
+        }
+
+        traverseTree(firstNode);
+
+        boolean isTreeClosed = false;
+        int i = 0;
+
+        while (!isTreeClosed) {
+            Node root = new Node(terms.get(i));
+
+            if (i == 0) {
+                root.isRoot = true;
+            }
+
+            charStack.push(terms.get(i));
+
+            for (Formula formula : formulaList) {
+                boolean isFormulaSatisfiable = true;
+                boolean matches = true;
+                if (formula.getTerms().size() == charStack.size()) {
+                    Stack<Character> tempStack = charStack;
+                    for (int j = 0; j < tempStack.size(); j++) {
+                        boolean termMatches = false;
+                        for (int k = 0; k < formula.getTerms().size(); k++) {
+                            if (formula.getTerms().get(k) == tempStack.peek()) {
+                                termMatches = true;
+                                break;
+                            }
+                        }
+                        if (!termMatches) {
+                            matches = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (matches) {
+                    String[] splitFormula = breakUpTerms(formula); // separate out the terms first
+                    isFormulaSatisfiable = isFormulaSatisfiable && evaluateFormula(splitFormula); // update whether the solution is correct for all formulas
+                    if (isFormulaSatisfiable) {
+
+                    } else {
+                        break;
+                    }
+                } else {
+                    i++;
+                    if (root.getLeftNode() == null) {
+                        Node nextNode = new Node(terms.get(i), false);
+                        root.setLeftNode(nextNode);
+                        nextNode.setParentNode(root);
+                    } else {
+                        Node nextNode = new Node(terms.get(i), true);
+                        root.setRightNode(nextNode);
+                        nextNode.setParentNode(root);
+                    }
+                }
+            }
+
+
+        }
+        return false;
+
+        //traverseTree(root);
+
+        /*for (int i = 0; i < numRows; i++) {
             boolean isFormulaSatisfiable = true;
 
             for (int j = 0; j < terms.size(); j++) {
@@ -53,11 +141,11 @@ public class SATChecker {
                 isFormulaSatisfiable = isFormulaSatisfiable && evaluateFormula(splitFormula); // update whether the solution is correct for all formulas
             }
 
-            isSetSatisfiable = isFormulaSatisfiable || isSetSatisfiable;
+            isSetSatisfiable = isFormulaSatisfiable || isSetSatisfiable; // update whether the set is satisfiable
             if (isFormulaSatisfiable) {
                 solution.add(termDictionary.toString()); // add this to our solution if it works
             }
-        }
+        }*/
 
         return isSetSatisfiable;
     }
@@ -68,7 +156,8 @@ public class SATChecker {
     will be turned into
     "((p || q) && r)" + "?" + "t"
      */
-    private String[] breakUpTerms(String formula) {
+    private String[] breakUpTerms(Formula formulaObject) {
+        String formula = formulaObject.getFormulaString();
         if (formula.contains("(") && formula.contains(")")) {
             ArrayList<Integer> startSeparations = new ArrayList<>();
             ArrayList<Integer> endSeparations = new ArrayList<>();
@@ -117,6 +206,70 @@ public class SATChecker {
         } else {
             return formula.split(" "); // if no brackets, just split it based on spaces
         }
+    }
+
+    private boolean traverseTree(Node root) {
+        if (root.terms.size() == 0) {
+            if (root.getLeftNode() == null) {
+                Node leftNode = new Node();
+                leftNode.states.add(0, false);
+                leftNode.terms.add(terms.get(0));
+                root.setLeftNode(leftNode);
+                leftNode.setParentNode(root);
+                traverseTree(leftNode);
+            } else if (root.getRightNode() != null) {
+                return false;
+            } else {
+                Node rightNode = new Node();
+                rightNode.states.add(0, true);
+                rightNode.terms.add(terms.get(0));
+                root.setRightNode(root);
+                rightNode.setParentNode(root);
+                traverseTree(rightNode);
+            }
+        } else {
+            boolean isSetSatisfiable = true;
+            boolean currentSolutionSatisfies = false;
+            boolean areFormulasDoable = false;
+            for (Formula formula : formulaList) {
+                boolean isFormulaSatisfiable = true;
+                boolean isFormulaDoable = false;
+                if (formula.getTerms().size() == root.terms.size()) {
+                    for (int j = 0; j < root.terms.size(); j++) {
+                        boolean termMatches = formula.getTerms().contains(root.terms.get(j));
+                        if (!termMatches) {
+                            isFormulaDoable = false;
+                            break;
+                        } else {
+                            isFormulaDoable = true;
+                        }
+                    }
+                    areFormulasDoable = areFormulasDoable || isFormulaDoable;
+                } else {
+
+                }
+
+                if (isFormulaDoable) {
+                    String[] splitFormula = breakUpTerms(formula); // separate out the terms first
+                    isFormulaSatisfiable = evaluateFormula(splitFormula); // update whether the solution is correct for all formulas
+                    if(!isFormulaSatisfiable){
+                        break;
+                    } else {
+                        currentSolutionSatisfies = true;
+                    }
+                }
+            }
+
+
+            if(areFormulasDoable && currentSolutionSatisfies){
+
+            }
+
+            if(currentSolutionSatisfies){
+
+            }
+        }
+        return false;
     }
 
     /*
